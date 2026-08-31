@@ -54,12 +54,16 @@ class PMSReaderTests(unittest.TestCase):
         pms.PMS_DECRYPTION_KEY_ID = "morning-shift-test-key"
         pms._session_factory.cache_clear()
         pms._private_key.cache_clear()
+        pms._load_inhouse_import.cache_clear()
+        pms._load_cancellation_import.cache_clear()
         pms.PMSBase.metadata.create_all(pms._session_factory().kw["bind"])
 
     def tearDown(self) -> None:
         pms._session_factory().kw["bind"].dispose()
         pms._session_factory.cache_clear()
         pms._private_key.cache_clear()
+        pms._load_inhouse_import.cache_clear()
+        pms._load_cancellation_import.cache_clear()
         self.tmp.cleanup()
 
     def test_loads_only_latest_completed_snapshot_and_decrypts_in_memory(self) -> None:
@@ -88,8 +92,12 @@ class PMSReaderTests(unittest.TestCase):
             )
             session.commit()
 
-        rows = pms.load_current_inhouse()
+        with patch.object(pms, "_decode", wraps=pms._decode) as decoder:
+            rows = pms.load_current_inhouse()
+            cached_rows = pms.load_current_inhouse()
         self.assertEqual(rows, [(payload, reservation_lookup, "c" * 64)])
+        self.assertEqual(cached_rows, rows)
+        decoder.assert_called_once()
 
     def test_private_key_is_parsed_once_per_worker(self) -> None:
         with patch.object(pms.serialization, "load_pem_private_key", wraps=pms.serialization.load_pem_private_key) as loader:

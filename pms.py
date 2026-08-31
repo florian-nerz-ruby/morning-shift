@@ -126,6 +126,31 @@ def _cancellation_aad(row: PMSCancellationEvent) -> str:
     )
 
 
+@lru_cache
+def _load_inhouse_import(
+    import_file_id: str, snapshot_date: date
+) -> tuple[tuple[dict[str, object], str, str], ...]:
+    """Decrypt one immutable completed snapshot once per worker.
+
+    The import-file id is part of the cache key, so a successful PMS upload
+    automatically selects a new cache entry without retaining source data on
+    disk or changing the encrypted database.
+    """
+
+    factory = _session_factory()
+    with factory() as session:
+        rows = session.scalars(
+            select(PMSInhouseObservation).where(
+                PMSInhouseObservation.snapshot_date == snapshot_date,
+                PMSInhouseObservation.import_file_id == import_file_id,
+            )
+        ).all()
+        return tuple(
+            (_decode(row.encrypted_payload, aad=_inhouse_aad(row)), row.reservation_lookup, row.payload_fingerprint)
+            for row in rows
+        )
+
+
 def load_current_inhouse() -> list[tuple[dict[str, object], str, str]]:
     """Return decrypted latest-snapshot payloads plus opaque state identifiers."""
 
@@ -139,14 +164,36 @@ def load_current_inhouse() -> list[tuple[dict[str, object], str, str]]:
         )
         if import_file is None:
             return []
+        import_file_id = import_file.id
+        snapshot_date = import_file.business_date
+    return list(_load_inhouse_import(import_file_id, snapshot_date))
+
+
+@lru_cache
+def _load_cancellation_import(import_file_id: str) -> tuple[tuple[dict[str, object], str, str], ...]:
+    """Decrypt cancellation history once per worker for a completed import."""
+
+    factory = _session_factory()
+    with factory() as session:
         rows = session.scalars(
-            select(PMSInhouseObservation).where(PMSInhouseObservation.snapshot_date == import_file.business_date)
+            select(PMSCancellationEvent).order_by(PMSCancellationEvent.cancellation_date.desc())
         ).all()
-        return [(_decode(row.encrypted_payload, aad=_inhouse_aad(row)), row.reservation_lookup, row.payload_fingerprint) for row in rows]
+        return tuple(
+            (_decode(row.encrypted_payload, aad=_cancellation_aad(row)), row.event_lookup, row.payload_fingerprint)
+            for row in rows
+        )
 
 
 def load_cancellation_events() -> list[tuple[dict[str, object], str, str]]:
     factory = _session_factory()
     with factory() as session:
-        rows = session.scalars(select(PMSCancellationEvent).order_by(PMSCancellationEvent.cancellation_date.desc())).all()
-        return [(_decode(row.encrypted_payload, aad=_cancellation_aad(row)), row.event_lookup, row.payload_fingerprint) for row in rows]
+        import_file = session.scalar(
+            select(PMSImportFile)
+            .where(PMSImportFile.report_type == "cancellation", PMSImportFile.status == "completed")
+            .order_by(PMSImportFile.completed_at.desc())
+            .limit(1)
+        )
+        if import_file is None:
+            return []
+        import_file_id = import_file.id
+    return list(_load_cancellation_import(import_file_id))
