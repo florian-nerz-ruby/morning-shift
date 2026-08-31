@@ -11,7 +11,7 @@ WorkingDirectory=/opt/morning-shift
 EnvironmentFile=/etc/morning-shift/morning-shift.env
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/opt/morning-shift/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5000 --access-logfile - --error-logfile - --capture-output app:app
+ExecStart=/opt/morning-shift/.venv/bin/gunicorn --preload --workers 2 --bind 127.0.0.1:5000 --access-logfile - --error-logfile - --capture-output app:app
 Restart=on-failure
 RestartSec=5s
 TimeoutStartSec=60s
