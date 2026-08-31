@@ -11,7 +11,11 @@ WorkingDirectory=/opt/morning-shift
 EnvironmentFile=/etc/morning-shift/morning-shift.env
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/opt/morning-shift/.venv/bin/gunicorn --preload --workers 2 --bind 127.0.0.1:5000 --access-logfile - --error-logfile - --capture-output app:app
+# Do not preload: importing app.py creates SQLAlchemy engines, and preloading
+# would fork any pooled PostgreSQL/TLS connection into multiple workers.
+# One worker is sufficient for this small internal workflow app and also makes
+# first-start schema creation race-free.
+ExecStart=/opt/morning-shift/.venv/bin/gunicorn --workers 1 --bind 127.0.0.1:5000 --access-logfile - --error-logfile - --capture-output app:app
 Restart=on-failure
 RestartSec=5s
 TimeoutStartSec=60s
