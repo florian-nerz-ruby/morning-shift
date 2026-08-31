@@ -92,6 +92,7 @@ body {
 .task-card--attention { border-color: #f0b8b8; }
 .task-card-icon { font-size: 1.7rem; }
 .task-card-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; }
+.task-card-date { color: var(--text-dim); font-size: 0.82rem; margin-bottom: 5px; }
 .task-card-desc { color: var(--text-dim); font-size: 0.92rem; }
 .task-card-badge {
   position: absolute;

@@ -40,11 +40,7 @@
 
   <h1 class="home-title">Good morning 👋</h1>
   <p class="home-subtitle">
-    {% if report_date %}
-      Report loaded for <strong>{{ report_date.strftime('%A, %d %B %Y') }}</strong>
-    {% else %}
-      No report loaded yet
-    {% endif %}
+    Today is <strong>{{ operational_date.strftime('%A, %d %B %Y') }}</strong>
   </p>
 
   <div class="task-grid">
@@ -52,6 +48,9 @@
       <div class="task-card-icon">🚫</div>
       <div class="task-card-body">
         <div class="task-card-title">Cancellation Check</div>
+        {% if cancellation_date %}
+        <div class="task-card-date">Cancellations dated {{ cancellation_date.strftime('%A, %d %B %Y') }}</div>
+        {% endif %}
         <div class="task-card-desc">Review yesterday's cancellations and flag late ones that need a fee booked.</div>
       </div>
       {% if has_data %}
@@ -71,6 +70,9 @@
       <div class="task-card-icon">🏷️</div>
       <div class="task-card-body">
         <div class="task-card-title">In-House Check</div>
+        {% if inhouse_report_date %}
+        <div class="task-card-date">Snapshot for {{ inhouse_report_date.strftime('%A, %d %B %Y') }}</div>
+        {% endif %}
         <div class="task-card-desc">Catch in-house reservations with an odd balance or more than one room.</div>
       </div>
       {% if has_inhouse_data %}

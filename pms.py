@@ -197,3 +197,16 @@ def load_cancellation_events() -> list[tuple[dict[str, object], str, str]]:
             return []
         import_file_id = import_file.id
     return list(_load_cancellation_import(import_file_id))
+
+
+def latest_completed_report_date(report_type: str) -> date | None:
+    """Return a report's business date without decrypting any payloads."""
+
+    factory = _session_factory()
+    with factory() as session:
+        return session.scalar(
+            select(PMSImportFile.business_date)
+            .where(PMSImportFile.report_type == report_type, PMSImportFile.status == "completed")
+            .order_by(PMSImportFile.business_date.desc(), PMSImportFile.completed_at.desc())
+            .limit(1)
+        )

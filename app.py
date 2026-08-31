@@ -12,7 +12,7 @@ import hashlib
 import os
 import re
 import secrets
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
@@ -21,6 +21,7 @@ from cancellation_logic import load_cancellations
 from db import SessionLocal, init_db
 from inhouse_logic import load_inhouse_reservations
 from models import AppSettingRecord, HandledFindingRecord
+from pms import latest_completed_report_date
 from property_store import PropertyStore
 from rules_store import FEE_LABELS, RuleStore
 from threshold_rules_store import ThresholdRuleStore
@@ -171,7 +172,7 @@ def home():
     scoped_cancellations = [c for c in all_cancellations if c.property_code in selected]
     late = [c for c in scoped_cancellations if c.is_late]
     late_open = [c for c in late if not c.handled]
-    report_date = max((c.cancel_date for c in all_cancellations), default=None)
+    cancellation_date = max((c.cancel_date for c in all_cancellations), default=None)
 
     scoped_inhouse = [r for r in all_inhouse if r.property_code in selected]
     flagged = [r for r in scoped_inhouse if r.is_flagged]
@@ -179,7 +180,9 @@ def home():
 
     return render_template(
         "home.html",
-        report_date=report_date,
+        operational_date=date.today(),
+        cancellation_date=cancellation_date,
+        inhouse_report_date=latest_completed_report_date("inhouse"),
         has_data=bool(all_cancellations),
         late_count=len(late),
         late_open_count=len(late_open),
