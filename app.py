@@ -113,10 +113,10 @@ def set_handled(check: str, key: str, fingerprint: str, handled: bool) -> None:
 
 
 def get_selected_properties(known_properties: set[str]) -> set[str]:
-    """Per-browser-session hotel scope. Defaults to everything until the
-    person using this browser narrows it down themselves."""
+    """Per-browser-session hotel scope. Starts empty until the person using
+    this browser deliberately selects one or more hotels."""
     if "selected_properties" not in session:
-        return set(known_properties)
+        return set()
     return set(session["selected_properties"])
 
 
