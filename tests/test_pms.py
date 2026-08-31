@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from datetime import date, datetime
 from pathlib import Path
+from unittest.mock import patch
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
@@ -52,11 +53,13 @@ class PMSReaderTests(unittest.TestCase):
         ).decode("ascii")
         pms.PMS_DECRYPTION_KEY_ID = "morning-shift-test-key"
         pms._session_factory.cache_clear()
+        pms._private_key.cache_clear()
         pms.PMSBase.metadata.create_all(pms._session_factory().kw["bind"])
 
     def tearDown(self) -> None:
         pms._session_factory().kw["bind"].dispose()
         pms._session_factory.cache_clear()
+        pms._private_key.cache_clear()
         self.tmp.cleanup()
 
     def test_loads_only_latest_completed_snapshot_and_decrypts_in_memory(self) -> None:
@@ -87,6 +90,11 @@ class PMSReaderTests(unittest.TestCase):
 
         rows = pms.load_current_inhouse()
         self.assertEqual(rows, [(payload, reservation_lookup, "c" * 64)])
+
+    def test_private_key_is_parsed_once_per_worker(self) -> None:
+        with patch.object(pms.serialization, "load_pem_private_key", wraps=pms.serialization.load_pem_private_key) as loader:
+            self.assertIs(pms._private_key(), pms._private_key())
+        loader.assert_called_once()
 
 
 if __name__ == "__main__":

@@ -75,6 +75,7 @@ def _session_factory() -> sessionmaker:
     return sessionmaker(bind=create_engine(PMS_DATABASE_URL, pool_pre_ping=True, connect_args=connect_args), expire_on_commit=False)
 
 
+@lru_cache
 def _private_key() -> rsa.RSAPrivateKey:
     if not _configured():
         raise PMSReadError("PMS reader is not configured")
