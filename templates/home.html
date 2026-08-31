@@ -1,0 +1,115 @@
+{% extends "_base.html" %}
+{% block title %}Alfred - Morning Tasks{% endblock %}
+
+{% block content %}
+<div class="home">
+  {% if property_directory %}
+  <details class="hotel-picker" id="hotel-picker" {% if not hotels_confirmed %}open{% endif %}>
+    <summary>
+      <span class="hotel-picker-label">🏨 Hotels</span>
+      <span class="hotel-picker-summary">
+        {% if selected_properties|length == property_directory|length %}
+          All {{ property_directory|length }} hotels
+        {% elif selected_properties %}
+          {{ selected_properties|length }} of {{ property_directory|length }} selected
+        {% else %}
+          None selected
+        {% endif %}
+      </span>
+      <span class="hotel-picker-change">change</span>
+    </summary>
+
+    <form action="{{ url_for('save_properties') }}" method="post" id="hotel-form">
+      <p class="hotel-panel-desc">Only selected hotels show up in any check. This choice is remembered for this browser only.</p>
+      <div class="hotel-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="select-all">Select all</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="select-none">Select none</button>
+      </div>
+      <div class="hotel-chips">
+        {% for code, name in property_directory %}
+        <label class="hotel-chip" title="{{ code }}">
+          <input type="checkbox" name="property" value="{{ code }}" {% if code in selected_properties %}checked{% endif %}>
+          {{ name }}
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary">Save &amp; continue</button>
+    </form>
+  </details>
+  {% endif %}
+
+  <h1 class="home-title">Good morning 👋</h1>
+  <p class="home-subtitle">
+    {% if report_date %}
+      Report loaded for <strong>{{ report_date.strftime('%A, %d %B %Y') }}</strong>
+    {% else %}
+      No report loaded yet
+    {% endif %}
+  </p>
+
+  <div class="task-grid">
+    <a class="task-card {% if late_open_count > 0 %}task-card--attention{% endif %}" href="{{ url_for('cancellation_check') }}">
+      <div class="task-card-icon">🚫</div>
+      <div class="task-card-body">
+        <div class="task-card-title">Cancellation Check</div>
+        <div class="task-card-desc">Review yesterday's cancellations and flag late ones that need a fee booked.</div>
+      </div>
+      {% if has_data %}
+        <div class="task-card-badge {% if late_open_count == 0 %}task-card-badge--done{% endif %}">
+          {% if late_open_count > 0 %}
+            {{ late_open_count }} need{{ '' if late_open_count == 1 else 's' }} fee
+          {% else %}
+            All clear
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="task-card-badge task-card-badge--muted">No data</div>
+      {% endif %}
+    </a>
+
+    <a class="task-card {% if flagged_open_count > 0 %}task-card--attention{% endif %}" href="{{ url_for('inhouse_check') }}">
+      <div class="task-card-icon">🏷️</div>
+      <div class="task-card-body">
+        <div class="task-card-title">In-House Check</div>
+        <div class="task-card-desc">Catch in-house reservations with an odd balance or more than one room.</div>
+      </div>
+      {% if has_inhouse_data %}
+        <div class="task-card-badge {% if flagged_open_count == 0 %}task-card-badge--done{% endif %}">
+          {% if flagged_open_count > 0 %}
+            {{ flagged_open_count }} flagged
+          {% else %}
+            All clear
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="task-card-badge task-card-badge--muted">No data</div>
+      {% endif %}
+    </a>
+  </div>
+
+  {% if not has_data or not has_inhouse_data %}
+  <div class="upload-panel">
+    <h2>Waiting for data</h2>
+    <p class="hotel-panel-desc">
+      {% if not has_data and not has_inhouse_data %}
+        No cancellations or in-house reservations yet.
+      {% elif not has_data %}
+        No cancellations yet.
+      {% else %}
+        No in-house reservations yet.
+      {% endif %}
+      Alfred reads both from the database - it's populated by the ingestion
+      pipeline, not uploaded through the browser.
+    </p>
+  </div>
+  {% endif %}
+</div>
+<script>
+  document.getElementById("select-all")?.addEventListener("click", () => {
+    document.querySelectorAll('#hotel-form input[type="checkbox"]').forEach((c) => (c.checked = true));
+  });
+  document.getElementById("select-none")?.addEventListener("click", () => {
+    document.querySelectorAll('#hotel-form input[type="checkbox"]').forEach((c) => (c.checked = false));
+  });
+</script>
+{% endblock %}

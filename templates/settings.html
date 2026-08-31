@@ -1,0 +1,214 @@
+{% extends "_base.html" %}
+{% block title %}Settings - Alfred{% endblock %}
+{% block page_class %}page--wide{% endblock %}
+
+{% block content %}
+<div class="settings">
+  <div class="check-header">
+    <div>
+      <h1>Cancellation Policy Rules</h1>
+      <p class="check-subtitle">Every distinct policy text seen in the PMS export, and how Alfred should judge it. Configure any rule marked "Needs setup".</p>
+    </div>
+    <a class="btn btn-ghost" href="{{ url_for('home') }}">&larr; Back to tasks</a>
+  </div>
+
+  <div class="table-wrap">
+    <table class="rules-table">
+      <thead>
+        <tr>
+          <th>Policy text</th>
+          <th>Status</th>
+          <th>Fee</th>
+          <th>Deadline</th>
+          <th>Days before arrival</th>
+          <th>Cutoff time</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rules %}
+        <tr class="{% if not r.configured %}rule-row--unconfigured{% endif %}">
+          <td class="rule-text">{{ r.display_name }}</td>
+          <td>
+            {% if r.configured %}
+              <span class="badge badge--{{ 'manual' if r.source == 'manual' else 'auto' }}">{{ 'Manual' if r.source == 'manual' else 'Auto-detected' }}</span>
+            {% else %}
+              <span class="badge badge--needs-setup">Needs setup</span>
+            {% endif %}
+          </td>
+          <td>
+            <select name="fee_type" form="rule-form-{{ r.slug }}">
+              <option value="first_night" {% if r.fee_type == 'first_night' %}selected{% endif %}>1st Night</option>
+              <option value="full_stay" {% if r.fee_type == 'full_stay' %}selected{% endif %}>Full Stay</option>
+            </select>
+          </td>
+          <td>
+            <select name="deadline_type" class="deadline-type-select" form="rule-form-{{ r.slug }}">
+              <option value="days" {% if not r.always_late %}selected{% endif %}>X days before arrival</option>
+              <option value="non_ref" {% if r.always_late %}selected{% endif %}>Non-refundable</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" min="0" name="days_before_arrival" value="{{ r.days_before_arrival if r.days_before_arrival is not none else 0 }}" class="days-input" {% if r.always_late %}disabled{% endif %} form="rule-form-{{ r.slug }}">
+          </td>
+          <td>
+            <input type="time" name="cutoff_time" value="{{ r.cutoff_time or '' }}" class="cutoff-input" {% if r.always_late %}disabled{% endif %} form="rule-form-{{ r.slug }}">
+          </td>
+          <td>
+            <button type="submit" class="btn btn-primary btn-sm" form="rule-form-{{ r.slug }}">Save</button>
+            <form id="rule-form-{{ r.slug }}" action="{{ url_for('update_rule') }}" method="post" autocomplete="off">
+              <input type="hidden" name="rule_key" value="{{ r.key }}">
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="check-header settings-section-header">
+    <div>
+      <h1>Hotel Names &amp; Currency</h1>
+      <p class="check-subtitle">How each property code should be displayed, and what currency its balances are in. Auto-detected from the exports where possible; configure any code marked "Needs setup" by hand, or when a source only ever supplies the code.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="rules-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Status</th>
+          <th>Name</th>
+          <th>Currency</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in properties %}
+        {% set needs_setup = not p.name_configured or not p.currency_configured %}
+        <tr class="{% if needs_setup %}rule-row--unconfigured{% endif %}">
+          <td class="rule-text mono">{{ p.code }}</td>
+          <td>
+            {% if needs_setup %}
+              <span class="badge badge--needs-setup">Needs setup</span>
+            {% elif p.name_source == 'manual' or p.currency_source == 'manual' %}
+              <span class="badge badge--manual">Manual</span>
+            {% else %}
+              <span class="badge badge--auto">Auto-detected</span>
+            {% endif %}
+          </td>
+          <td>
+            <input type="text" name="name" value="{{ p.name }}" placeholder="{{ p.code }}" form="property-form-{{ p.code }}">
+          </td>
+          <td>
+            <input type="text" name="currency" value="{{ p.currency }}" placeholder="EUR" maxlength="3" class="currency-input" form="property-form-{{ p.code }}">
+          </td>
+          <td>
+            <button type="submit" class="btn btn-primary btn-sm" form="property-form-{{ p.code }}">Save</button>
+            <form id="property-form-{{ p.code }}" action="{{ url_for('update_property') }}" method="post" autocomplete="off">
+              <input type="hidden" name="code" value="{{ p.code }}">
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% macro threshold_engine(metric, title, desc, data) %}
+  <div class="check-header settings-section-header">
+    <div>
+      <h1>{{ title }}</h1>
+      <p class="check-subtitle">{{ desc }}</p>
+    </div>
+  </div>
+
+  <div class="rule-engine">
+    <div class="rule-default-row">
+      <span class="rule-default-label">Default <span class="dim">(any hotel not covered by a rule below)</span></span>
+      <input type="number" step="0.01" name="threshold" value="{{ data.default }}" class="days-input" form="{{ metric }}-default-form">
+      <button type="submit" class="btn btn-primary btn-sm" form="{{ metric }}-default-form">Save</button>
+      <form id="{{ metric }}-default-form" action="{{ url_for('update_rule_default', metric=metric) }}" method="post" autocomplete="off"></form>
+    </div>
+
+    {% for rule in data.rules %}
+    <div class="rule-card">
+      <div class="rule-card-row">
+        <input type="text" name="label" value="{{ rule.label }}" class="rule-label-input" placeholder="Rule name" form="{{ metric }}-rule-{{ rule.id }}">
+        <input type="number" step="0.01" name="threshold" value="{{ rule.threshold }}" class="days-input" form="{{ metric }}-rule-{{ rule.id }}">
+        <button type="submit" class="btn btn-primary btn-sm" form="{{ metric }}-rule-{{ rule.id }}">Save</button>
+        <button type="submit" class="btn btn-ghost btn-sm" form="{{ metric }}-delete-{{ rule.id }}">Delete</button>
+      </div>
+      <details class="rule-card-picker" {% if not rule.properties %}open{% endif %}>
+        <summary>
+          {{ rule.properties|length }} hotel{{ '' if rule.properties|length == 1 else 's' }}{% if rule.member_names %}: {{ rule.member_names|join(', ') }}{% endif %}
+          <span class="hotel-picker-change">change</span>
+        </summary>
+        <div class="rule-picker-actions">
+          {% for currency in distinct_currencies %}
+            <button type="button" class="btn btn-ghost btn-sm currency-select" data-target="picker-{{ metric }}-{{ rule.id }}" data-currency="{{ currency }}">+ all {{ currency }}</button>
+          {% endfor %}
+          <button type="button" class="btn btn-ghost btn-sm clear-select" data-target="picker-{{ metric }}-{{ rule.id }}">Clear</button>
+        </div>
+        <div class="hotel-chips" id="picker-{{ metric }}-{{ rule.id }}">
+          {% for code, name in known_properties %}
+          <label class="hotel-chip" title="{{ code }}" data-currency="{{ property_currencies[code] }}">
+            <input type="checkbox" name="properties" value="{{ code }}" form="{{ metric }}-rule-{{ rule.id }}" {% if code in rule.properties %}checked{% endif %}>
+            {{ name }}
+          </label>
+          {% endfor %}
+        </div>
+      </details>
+      <form id="{{ metric }}-rule-{{ rule.id }}" action="{{ url_for('save_threshold_rule', metric=metric) }}" method="post" autocomplete="off">
+        <input type="hidden" name="rule_id" value="{{ rule.id }}">
+      </form>
+      <form id="{{ metric }}-delete-{{ rule.id }}" action="{{ url_for('delete_threshold_rule', metric=metric) }}" method="post"></form>
+    </div>
+    {% endfor %}
+
+    <form action="{{ url_for('add_threshold_rule', metric=metric) }}" method="post">
+      <button type="submit" class="btn btn-ghost">+ Add rule</button>
+    </form>
+  </div>
+
+  <div class="table-wrap">
+    <table class="rules-table">
+      <thead>
+        <tr><th>Hotel</th><th>Currency</th><th>Effective</th><th>Source</th></tr>
+      </thead>
+      <tbody>
+        {% for r in data.resolved %}
+        <tr class="{% if r.needs_review %}rule-row--unconfigured{% endif %}">
+          <td class="rule-text">{{ r.name }} <span class="dim mono">{{ r.code }}</span></td>
+          <td class="mono">{{ r.currency }}</td>
+          <td class="mono">{{ r.threshold }}</td>
+          <td>
+            {% if r.needs_review %}<span class="badge badge--needs-setup">Review</span>{% else %}{{ r.source }}{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endmacro %}
+
+  {{ threshold_engine('balance', 'In-House: Balance Threshold Rules', 'Cutoff for the "credit buffer too thin" flag - a balance above this (in the hotel\'s own currency) gets flagged. A hotel belongs to at most one rule; picking it for a new rule removes it from any other. Rows marked "Review" are still on the untouched default despite not being in EUR.', balance_data) }}
+
+  <div class="check-header settings-section-header">
+    <div>
+      <h1>In-House: Room Count Rule</h1>
+      <p class="check-subtitle">Flags a reservation with more rooms than this - the same number for every hotel, since room count isn't a currency or per-property concern the way balance is.</p>
+    </div>
+  </div>
+
+  <div class="rule-default-row">
+    <span class="rule-default-label">Flag when a reservation has more than</span>
+    <input type="number" step="1" min="1" name="threshold" value="{{ rooms_threshold|int }}" class="days-input" form="rooms-threshold-form">
+    <span class="rule-default-label">room(s)</span>
+    <button type="submit" class="btn btn-primary btn-sm" form="rooms-threshold-form">Save</button>
+    <form id="rooms-threshold-form" action="{{ url_for('update_rooms_threshold') }}" method="post" autocomplete="off"></form>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='settings.js') }}"></script>
+{% endblock %}

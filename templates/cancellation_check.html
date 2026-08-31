@@ -1,0 +1,132 @@
+{% extends "_base.html" %}
+{% block title %}Cancellation Check - Alfred{% endblock %}
+{% block page_class %}page--wide{% endblock %}
+
+{% block content %}
+<div class="check">
+  <div class="check-header">
+    <div>
+      <h1>Cancellation Check</h1>
+      <p class="check-subtitle">
+        {% if report_date %}Cancellations from <strong>{{ report_date.strftime('%A, %d %B %Y') }}</strong>{% endif %}
+        &middot; <span id="flag-count">{{ late_count }}</span> still need a fee
+      </p>
+    </div>
+    <a class="btn btn-ghost" href="{{ url_for('home') }}">&larr; Back to tasks</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="search" id="search-box" placeholder="Search confirmation number…" autocomplete="off">
+
+    <select id="property-filter">
+      <option value="">All hotels</option>
+      {% for code, name in properties %}
+        <option value="{{ code }}">{{ name }}{% if name != code %} ({{ code }}){% endif %}</option>
+      {% endfor %}
+    </select>
+
+    <div class="view-switch" id="view-switch">
+      <label class="view-switch-option">
+        <input type="radio" name="view" value="flagged" checked>
+        <span>To do</span>
+      </label>
+      <label class="view-switch-option">
+        <input type="radio" name="view" value="all">
+        <span>All</span>
+      </label>
+      <label class="view-switch-option">
+        <input type="radio" name="view" value="done">
+        <span>Done</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-scroll">
+    <table class="cancel-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Hotel</th>
+          <th>Confirmation #</th>
+          <th>Nights</th>
+          <th>Arrival</th>
+          <th>Cancelled</th>
+          <th>Rule</th>
+          <th>Rate</th>
+          <th>Fee due</th>
+          <th></th>
+          <th>Done</th>
+        </tr>
+      </thead>
+      <tbody id="table-body" data-check="cancellation">
+        {% for r in rows %}
+        <tr class="row {% if r.is_late %}row--flagged{% endif %} {% if not r.configured %}row--unconfigured{% endif %} {% if r.handled %}row--handled{% endif %}"
+            data-property="{{ r.property }}"
+            data-confirmation="{{ r.confirmation_number }}"
+            data-flagged="{{ r.is_late | lower }}"
+            data-handled="{{ r.handled | lower }}"
+            data-key="{{ r.key }}"
+            data-finding-fingerprint="{{ r.finding_fingerprint }}">
+          <td class="status-cell">
+            {% if not r.configured %}<span class="status-dot status-dot--unknown" title="{{ r.reason }}"></span>
+            {% elif r.is_late %}<span class="status-dot status-dot--flagged" title="{{ r.reason }}"></span>
+            {% else %}<span class="status-dot status-dot--ok" title="{{ r.reason }}"></span>{% endif %}
+          </td>
+          <td class="hotel-cell">
+            <span class="hotel-cell-name">{{ r.hotel_name }}</span>
+            {% if r.hotel_name != r.property %}<span class="hotel-cell-code dim">{{ r.property }}</span>{% endif %}
+          </td>
+          <td class="mono confirmation-cell">
+            <span class="confirmation-number">{{ r.confirmation_number }}</span>
+            {% if r.is_shiji %}
+              <span class="ref-tag ref-tag--shiji" title="Migrated from the legacy Shiji system">
+                Shiji
+                {% if r.shiji_number %}
+                <button type="button" class="copy-btn" data-copy="{{ r.shiji_number }}" title="Copy Shiji reference number">{{ r.shiji_number }}</button>
+                {% endif %}
+              </span>
+            {% endif %}
+            {% if r.ta_locator %}
+              <span class="ref-tag" title="{{ r.source_description }} booking reference">
+                {{ r.source_description }}
+                <button type="button" class="copy-btn" data-copy="{{ r.ta_locator }}" title="Copy {{ r.source_description }} reference number">{{ r.ta_locator }}</button>
+              </span>
+            {% endif %}
+          </td>
+          <td>{{ r.nights }}</td>
+          <td class="nowrap">{{ r.arrival_date }}</td>
+          <td class="nowrap">{{ r.cancel_date }} <span class="dim">{{ r.cancel_time }}</span></td>
+          <td class="nowrap">
+            {% if r.deadline_text %}<div class="rule-deadline">{{ r.deadline_text }}</div>{% endif %}
+            <span class="rule-pill">{{ r.rule_text }}</span>
+          </td>
+          <td class="rate-cell">
+            <span class="rate-cell-code">{{ r.rate_code or '—' }}</span>
+            <span class="rate-cell-source dim">{{ r.source_description }}</span>
+          </td>
+          <td>
+            {% if not r.configured %}
+              <span class="fee-pill fee-pill--unknown">Needs setup</span>
+            {% elif r.is_late %}
+              <span class="fee-pill fee-pill--{{ 'full' if r.fee_type == 'Full Stay' else 'night' }}">{{ r.fee_type }}</span>
+            {% else %}
+              <span class="dim">&mdash;</span>
+            {% endif %}
+          </td>
+          <td>
+            <a class="opera-link" href="{{ r.opera_url }}" target="_blank" rel="noopener" title="Open in Opera Cloud">Opera &#8599;</a>
+          </td>
+          <td>
+            <input type="checkbox" class="handled-checkbox" {% if r.handled %}checked{% endif %} aria-label="Mark handled">
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <p class="empty-state" id="empty-state" hidden>Nothing matches your filters 🎉</p>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,575 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --border: #e2e4e9;
+  --text: #1c1f26;
+  --text-dim: #6b7280;
+  --brand: #2f3b52;
+  --accent: #2b6cb0;
+  --danger: #c53030;
+  --danger-bg: #fdecec;
+  --success: #2f855a;
+  --success-bg: #eafaf1;
+  --warning: #b7791f;
+  --warning-bg: #fff8e6;
+  --info: #5a4fcf;
+  --info-bg: #efecfc;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--brand);
+  color: white;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+.brand-mark { font-size: 1.4rem; }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* Data-dense pages (the check table, settings) get more breathing room so
+   columns can fit without forcing a horizontal scrollbar on typical screens. */
+.page--wide { max-width: 1500px; }
+
+/* ---- Home ---- */
+.home-title { font-size: 1.9rem; margin-bottom: 4px; }
+.home-subtitle { color: var(--text-dim); margin-top: 0; margin-bottom: 28px; }
+
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.task-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-decoration: none;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  position: relative;
+}
+.task-card:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(16,24,40,0.12); }
+.task-card--attention { border-color: #f0b8b8; }
+.task-card-icon { font-size: 1.7rem; }
+.task-card-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; }
+.task-card-desc { color: var(--text-dim); font-size: 0.92rem; }
+.task-card-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.task-card-badge--done { background: var(--success-bg); color: var(--success); }
+.task-card-badge--muted { background: #eee; color: var(--text-dim); }
+
+.upload-panel {
+  margin-top: 32px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.upload-panel h2 { margin-top: 0; font-size: 1.1rem; }
+
+/* ---- Buttons / inputs ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 9px 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #26588f; }
+.btn-ghost { background: transparent; border-color: rgba(255,255,255,0.4); color: inherit; }
+.check .btn-ghost { border-color: var(--border); color: var(--text); background: var(--surface); }
+
+input[type="search"], select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.92rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* ---- Cancellation check page ---- */
+.check-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.check-header h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.check-subtitle { color: var(--text-dim); margin: 0; }
+.settings-section-header { margin-top: 40px; }
+
+/* ---- Threshold rule engine (Settings: in-house balance/room rules) ---- */
+.rule-engine { margin-bottom: 20px; }
+
+.rule-default-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.rule-default-label { font-weight: 600; font-size: 0.92rem; }
+
+.rule-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.rule-card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rule-label-input { flex: 1 1 160px; min-width: 120px; font-weight: 600; }
+.rule-label-input, .rule-default-row input[type="number"] {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.92rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.rule-card-picker { margin-top: 10px; }
+.rule-card-picker summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rule-card-picker summary::-webkit-details-marker { display: none; }
+.rule-card-picker[open] summary { margin-bottom: 10px; }
+
+.rule-picker-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+#late-count { font-weight: 700; color: var(--danger); }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+#search-box { min-width: 240px; }
+
+.view-switch {
+  display: inline-flex;
+  background: #eef1f5;
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-switch-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.view-switch-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.view-switch-option:has(input:checked) {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.view-switch-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.table-scroll { overflow-x: auto; }
+
+.cancel-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.cancel-table th {
+  text-align: left;
+  background: #fafbfc;
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.cancel-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  /* top, not middle: several cells (hotel, rate, confirmation #) can stack a
+     second line, and a table cell can only use vertical-align consistently
+     across the row if none of them switch to display:flex - top alignment
+     is the one thing that stays correct whether a cell has one line or two. */
+  vertical-align: top;
+}
+.cancel-table tbody tr:last-child td { border-bottom: none; }
+
+.row--flagged { background: var(--danger-bg); }
+.row--handled { opacity: 0.55; }
+.row--handled .fee-pill, .row--handled .rule-pill { filter: grayscale(0.3); }
+
+/* Graded by the worst reason a row was flagged for (in-house check) -
+   full red is reserved for money actually owed; a row flagged only for its
+   room count gets no background tint at all, just the dot and pill, since
+   it isn't a financial risk. Using a flat red for every flagged row - the
+   simpler binary .row--flagged above, still used by the cancellation check,
+   where every flag genuinely is equally actionable - reads as equally
+   urgent regardless of cause, which stops being useful once "buffer
+   running low" turns out to be the common case for anyone mid-stay. */
+.row--severity-danger { background: var(--danger-bg); }
+.row--severity-warning { background: var(--warning-bg); }
+
+.row { transition: opacity 0.35s ease, background-color 0.3s ease; }
+/* Brief success flash the instant a row is checked off, before it either
+   settles into the dimmed "handled" look or fades away entirely. Element
+   selectors here beat .row--flagged/.row--severity-*/.row--unconfigured on
+   specificity so the flash reliably shows regardless of the row's prior
+   color. */
+tr.row--just-done { background-color: var(--success-bg); }
+tr.row--fading { opacity: 0; }
+
+.mono { font-variant-numeric: tabular-nums; }
+.dim { color: var(--text-dim); }
+.nowrap { white-space: nowrap; }
+
+.confirmation-cell { white-space: nowrap; }
+.confirmation-cell .confirmation-number { display: block; }
+
+.status-cell { width: 28px; }
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.status-dot--flagged { background: var(--danger); }
+.status-dot--danger { background: var(--danger); }
+.status-dot--warning { background: var(--warning); }
+.status-dot--info { background: var(--info); }
+.status-dot--ok { background: var(--success); }
+
+.rule-pill {
+  display: inline-block;
+  background: #eef1f5;
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.rule-deadline {
+  margin-bottom: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rate-cell { line-height: 1.5; white-space: nowrap; }
+.rate-cell-code { display: block; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rate-cell-source { display: block; font-size: 0.76rem; }
+
+.fee-pill {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fee-pill--night { background: var(--warning-bg); color: var(--warning); }
+.fee-pill--full { background: var(--danger-bg); color: var(--danger); }
+.fee-pill--unknown { background: #eee; color: var(--text-dim); }
+
+/* ---- Flag reason pills (in-house check) ---- */
+/* display:block (not flex) on the cell - a flex display on a <td> drops
+   table-cell layout for that cell alone, so it stops respecting
+   vertical-align while every sibling cell still does, which is exactly what
+   made the table look broken before. Block-level pills stack on their own
+   lines without needing the cell itself to become a flex container. */
+.reason-cell { white-space: nowrap; }
+.reason-pill {
+  display: block;
+  width: fit-content;
+  border-radius: 6px;
+  padding: 2px 9px;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.reason-pill:first-child { margin-top: 0; }
+.reason-pill--info { background: var(--info-bg); color: var(--info); }
+.reason-pill--warning { background: var(--warning-bg); color: var(--warning); }
+.reason-pill--danger { background: var(--danger-bg); color: var(--danger); }
+
+.handled-checkbox { width: 18px; height: 18px; cursor: pointer; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-dim);
+}
+
+.row--unconfigured { background: var(--info-bg); }
+.status-dot--unknown { background: var(--info); }
+
+/* A small labelled tag with an optional copyable reference number - used
+   both for the Shiji migration flag and for a channel's own booking
+   reference (TA_RECORD_LOCATOR), so they share one visual pattern. */
+.ref-tag {
+  /* flex (block-outside) + fit-content keeps each tag its own line - a
+     reservation can carry both a Shiji tag and a locator tag, and letting
+     them sit side by side risks a very wide cell (some locator numbers,
+     e.g. HotelBeds', run long). inline-flex would avoid that width issue
+     but wouldn't force the next tag onto a new line by itself. */
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  background: #eef1f5;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 4px 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.ref-tag--shiji { background: var(--info-bg); color: var(--info); }
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-dim);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.ref-tag--shiji .copy-btn { background: rgba(90, 79, 207, 0.14); color: var(--info); }
+.copy-btn::after { content: "⧉"; font-size: 0.85em; }
+.copy-btn:hover { filter: brightness(0.94); }
+/* Beats .ref-tag--shiji .copy-btn on specificity (3 classes vs 2) so the
+   "just copied" state always wins regardless of which tag it's inside. */
+.copy-btn.copy-btn--done { background: var(--success-bg); color: var(--success); }
+.copy-btn--done::after { content: "✓"; }
+
+/* ---- Hotel cell (check table) ---- */
+.hotel-cell { line-height: 1.5; white-space: nowrap; }
+.hotel-cell-name { display: block; font-weight: 600; }
+.hotel-cell-code { display: block; font-size: 0.76rem; }
+
+.opera-link {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.opera-link:hover { text-decoration: underline; }
+
+/* ---- Hotel selection picker (home page, first thing on the dashboard) ---- */
+.hotel-picker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.hotel-picker[open] { padding-bottom: 20px; }
+
+.hotel-picker summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.hotel-picker summary::-webkit-details-marker { display: none; }
+.hotel-picker-label { font-size: 1rem; }
+.hotel-picker-summary { color: var(--text-dim); font-weight: 500; }
+.hotel-picker-change {
+  margin-left: auto;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.hotel-panel-desc { color: var(--text-dim); font-size: 0.85rem; margin-top: 0; }
+
+.hotel-actions { display: flex; gap: 8px; margin-bottom: 14px; }
+
+.hotel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.hotel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fafbfc;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.08s ease, border-color 0.08s ease, color 0.08s ease;
+}
+.hotel-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+.hotel-chip:has(input:checked) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.hotel-chip:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Settings page ---- */
+.rules-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.rules-table th {
+  text-align: left;
+  background: #fafbfc;
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.rules-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.rules-table tbody tr:last-child td { border-bottom: none; }
+.rule-row--unconfigured { background: var(--info-bg); }
+.rule-text { font-weight: 600; }
+
+.rules-table select, .rules-table input[type="number"], .rules-table input[type="time"], .rules-table input[type="text"] {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+}
+.days-input { width: 70px; }
+.currency-input { width: 60px; text-transform: uppercase; }
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge--auto { background: #eef1f5; color: var(--text-dim); }
+.badge--manual { background: var(--success-bg); color: var(--success); }
+.badge--needs-setup { background: var(--info-bg); color: var(--info); }
+
+.btn-sm { padding: 6px 12px; font-size: 0.82rem; }

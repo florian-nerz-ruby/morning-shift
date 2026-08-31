@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+flask.log
+.venv/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+# Runtime data can contain raw legacy exports and must never be committed.
+data/
