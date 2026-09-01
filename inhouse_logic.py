@@ -84,6 +84,14 @@ class InHouseReservation:
 
     def evaluate(self, balance_threshold: float, rooms_threshold: float) -> None:
         reasons = []
+        # A zero folio balance is the expected state on the day the guest
+        # departs.  Do not create a balance or room-count task for it.
+        if self.departure_date == date.today() and self.balance == 0:
+            self.flag_reasons = reasons
+            self.is_flagged = False
+            self.severity = None
+            return
+
         threshold = Decimal(str(balance_threshold))
         if self.balance > 0:
             reasons.append({"label": "Positive balance", "severity": "danger"})

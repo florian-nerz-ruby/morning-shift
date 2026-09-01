@@ -119,6 +119,8 @@ and repeating that fact doesn't help anyone decide what to do:
 
 Independently of that, **more than one room** on a reservation is its own
 separate flag, and can show up alongside whichever balance reason applies.
+For reservations departing today, a zero balance is expected and does not
+create any flag, including a room-count-only flag.
 
 A row's color is graded by the worst reason it was flagged for, not a flat
 "flagged = red" - full red is reserved for a positive balance (money actually
