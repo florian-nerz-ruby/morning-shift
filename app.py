@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 SECRET_KEY_PATH = DATA_DIR / ".flask_secret_key"
 DEFAULT_ROOMS_THRESHOLD = 1.0
-VALID_CHECK_TYPES = {"cancellation", "inhouse"}
+VALID_CHECK_TYPES = {"cancellation", "inhouse", "failed_deposit"}
 ROOMS_THRESHOLD_SETTING_KEY = "rooms_threshold"
 HMAC_LOOKUP_RE = re.compile(r"^[a-f0-9]{64}$")
 
@@ -151,6 +151,16 @@ def get_all_inhouse_reservations():
     return reservations
 
 
+def get_all_failed_deposits():
+    reservations = [r for r in load_inhouse_reservations(property_store, balance_rules, get_rooms_threshold()) if r.failed_deposit_errors]
+    handled_map = load_handled_map("failed_deposit")
+    for r in reservations:
+        handled = handled_map.get(r.key)
+        r.handled = handled is not None and handled[0] == r.finding_fingerprint
+        r.handled_at = handled[1] if r.handled and handled is not None else None
+    return reservations
+
+
 def get_property_directory(*record_lists) -> list[tuple[str, str]]:
     """(code, hotel_name) pairs across any number of record lists (each check
     can introduce properties the others don't have), sorted by name."""
@@ -165,7 +175,8 @@ def get_property_directory(*record_lists) -> list[tuple[str, str]]:
 def home():
     all_cancellations = get_all_cancellations()
     all_inhouse = get_all_inhouse_reservations()
-    property_directory = get_property_directory(all_cancellations, all_inhouse)
+    all_failed_deposits = get_all_failed_deposits()
+    property_directory = get_property_directory(all_cancellations, all_inhouse, all_failed_deposits)
     known_properties = {code for code, _ in property_directory}
     selected = get_selected_properties(known_properties)
 
@@ -178,6 +189,9 @@ def home():
     flagged = [r for r in scoped_inhouse if r.is_flagged]
     flagged_open = [r for r in flagged if not r.handled]
 
+    scoped_failed_deposits = [r for r in all_failed_deposits if r.property_code in selected]
+    failed_deposit_open = [r for r in scoped_failed_deposits if not r.handled]
+
     return render_template(
         "home.html",
         operational_date=date.today(),
@@ -188,6 +202,8 @@ def home():
         late_open_count=len(late_open),
         has_inhouse_data=bool(all_inhouse),
         flagged_open_count=len(flagged_open),
+        has_failed_deposit_data=bool(all_failed_deposits),
+        failed_deposit_open_count=len(failed_deposit_open),
         property_directory=property_directory,
         selected_properties=selected,
         hotels_confirmed=hotels_confirmed(),
@@ -298,6 +314,47 @@ def inhouse_check():
         properties=[(code, name) for code, name in property_directory if code in selected],
         rows=rows,
         flagged_count=sum(1 for r in rows if r["is_flagged"] and not r["handled"]),
+    )
+
+
+@app.route("/failed-deposits")
+def failed_deposits():
+    all_failed_deposits = get_all_failed_deposits()
+    property_directory = get_property_directory(all_failed_deposits)
+    known_properties = {code for code, _ in property_directory}
+    selected = get_selected_properties(known_properties)
+    scoped = [r for r in all_failed_deposits if r.property_code in selected]
+
+    scoped.sort(key=lambda r: (r.handled, r.hotel_name.lower(), r.arrival_date))
+    rows = [
+        {
+            "key": r.key,
+            "finding_fingerprint": r.finding_fingerprint,
+            "property": r.property_code,
+            "hotel_name": r.hotel_name,
+            "confirmation_number": r.confirmation_number,
+            "arrival_date": r.arrival_date.strftime("%d %b %y"),
+            "departure_date": r.departure_date.strftime("%d %b %y"),
+            "nights": r.nights,
+            "rate_code": r.rate_code,
+            "source_description": r.source_description,
+            "is_shiji": r.is_shiji,
+            "shiji_number": r.shiji_number,
+            "ta_locator": r.ta_locator,
+            "number_of_rooms": r.number_of_rooms,
+            "failed_deposit_errors": r.failed_deposit_errors,
+            "handled": r.handled,
+            "opera_url": r.opera_url,
+        }
+        for r in scoped
+    ]
+
+    return render_template(
+        "failed_deposits.html",
+        report_date=latest_completed_report_date("inhouse"),
+        properties=[(code, name) for code, name in property_directory if code in selected],
+        rows=rows,
+        failed_count=sum(1 for r in rows if not r["handled"]),
     )
 
 

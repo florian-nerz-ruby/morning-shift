@@ -71,6 +71,7 @@ class InHouseReservation:
     is_shiji: bool
     shiji_number: str | None
     ta_locator: str | None
+    failed_deposit_errors: tuple[str, ...]
     entity_lookup: str
     finding_fingerprint: str
 
@@ -84,12 +85,21 @@ class InHouseReservation:
 
     def evaluate(self, balance_threshold: float, rooms_threshold: float) -> None:
         reasons = []
+        if self.failed_deposit_errors:
+            reasons.append(
+                {
+                    "label": "Deposit failed",
+                    "severity": "danger",
+                    "detail": "; ".join(self.failed_deposit_errors),
+                }
+            )
         # A zero folio balance is the expected state on the day the guest
-        # departs.  Do not create a balance or room-count task for it.
+        # departs.  Do not create a balance or room-count task for it, but a
+        # failed deposit remains actionable even on the departure day.
         if self.departure_date == date.today() and self.balance == 0:
             self.flag_reasons = reasons
-            self.is_flagged = False
-            self.severity = None
+            self.is_flagged = bool(reasons)
+            self.severity = "danger" if reasons else None
             return
 
         threshold = Decimal(str(balance_threshold))
@@ -152,6 +162,15 @@ def load_inhouse_reservations(
             for reference in references
             if isinstance(reference, dict) and reference.get("number")
         }
+        failed_deposit_errors = []
+        raw_failed_deposit_errors = payload.get("failed_deposit_errors", [])
+        if isinstance(raw_failed_deposit_errors, list):
+            for raw_error in raw_failed_deposit_errors:
+                if not isinstance(raw_error, str):
+                    continue
+                error = " ".join(raw_error.split())
+                if error and not any(existing.casefold() == error.casefold() for existing in failed_deposit_errors):
+                    failed_deposit_errors.append(error)
         try:
             records.append(
                 {
@@ -168,6 +187,7 @@ def load_inhouse_reservations(
                     "is_shiji": "SHIJI" in ref_map,
                     "shiji_number": ref_map.get("SHIJI") or None,
                     "ta_locator": ref_map.get("TA_RECORD_LOCATOR") or None,
+                    "failed_deposit_errors": tuple(failed_deposit_errors),
                     "property_name": str(payload.get("property_name", "")),
                     "currency": currency,
                     "entity_lookup": entity_lookup,

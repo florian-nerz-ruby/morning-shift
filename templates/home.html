@@ -73,7 +73,7 @@
         {% if inhouse_report_date %}
         <div class="task-card-date">In-House reservations for {{ inhouse_report_date.strftime('%A, %d %B %Y') }}</div>
         {% endif %}
-        <div class="task-card-desc">Catch in-house reservations with an odd balance or more than one room.</div>
+        <div class="task-card-desc">Catch in-house reservations with an odd balance, too many rooms, or a failed deposit.</div>
       </div>
       {% if has_inhouse_data %}
         <div class="task-card-badge {% if flagged_open_count == 0 %}task-card-badge--done{% endif %}">
@@ -85,6 +85,28 @@
         </div>
       {% else %}
         <div class="task-card-badge task-card-badge--muted">No data</div>
+      {% endif %}
+    </a>
+
+    <a class="task-card {% if failed_deposit_open_count > 0 %}task-card--attention{% endif %}" href="{{ url_for('failed_deposits') }}">
+      <div class="task-card-icon">💳</div>
+      <div class="task-card-body">
+        <div class="task-card-title">Failed Deposits</div>
+        {% if inhouse_report_date %}
+        <div class="task-card-date">In-House reservations for {{ inhouse_report_date.strftime('%A, %d %B %Y') }}</div>
+        {% endif %}
+        <div class="task-card-desc">Review AUTO-DEPOSIT authorization failures before they become an arrival issue.</div>
+      </div>
+      {% if has_failed_deposit_data %}
+        <div class="task-card-badge {% if failed_deposit_open_count == 0 %}task-card-badge--done{% endif %}">
+          {% if failed_deposit_open_count > 0 %}
+            {{ failed_deposit_open_count }} need{{ '' if failed_deposit_open_count == 1 else 's' }} review
+          {% else %}
+            All clear
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="task-card-badge task-card-badge--muted">No failures</div>
       {% endif %}
     </a>
   </div>
