@@ -152,7 +152,11 @@ def get_all_inhouse_reservations():
 
 
 def get_all_failed_deposits():
-    reservations = [r for r in load_inhouse_reservations(property_store, balance_rules, get_rooms_threshold()) if r.failed_deposit_errors]
+    reservations = [
+        r
+        for r in load_inhouse_reservations(property_store, balance_rules, get_rooms_threshold())
+        if r.failed_deposit_errors and r.arrival_date >= date.today()
+    ]
     handled_map = load_handled_map("failed_deposit")
     for r in reservations:
         handled = handled_map.get(r.key)
