@@ -131,6 +131,13 @@ class InHouseReservation:
         return format_balance(self.balance, self.currency)
 
     @property
+    def appears_in_inhouse_check(self) -> bool:
+        """Keep deposit-only work in its dedicated Failed Deposits queue."""
+        return not self.failed_deposit_errors or any(
+            reason["label"] != "Deposit failed" for reason in self.flag_reasons
+        )
+
+    @property
     def key(self) -> str:
         return self.entity_lookup
 

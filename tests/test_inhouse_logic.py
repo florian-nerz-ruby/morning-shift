@@ -87,6 +87,18 @@ class InHouseReservationEvaluationTests(unittest.TestCase):
                 }
             ],
         )
+        self.assertFalse(reservation.appears_in_inhouse_check)
+
+    def test_failed_deposit_with_another_flag_stays_in_inhouse_check(self) -> None:
+        reservation = _reservation(
+            departure_date=date.today() + timedelta(days=1),
+            balance="0",
+            failed_deposit_errors=("Invalid Card Number",),
+        )
+
+        reservation.evaluate(balance_threshold=-70, rooms_threshold=1)
+
+        self.assertTrue(reservation.appears_in_inhouse_check)
 
 
 class InHouseReservationLoadingTests(unittest.TestCase):

@@ -189,7 +189,9 @@ def home():
     late_open = [c for c in late if not c.handled]
     cancellation_date = max((c.cancel_date for c in all_cancellations), default=None)
 
-    scoped_inhouse = [r for r in all_inhouse if r.property_code in selected]
+    scoped_inhouse = [
+        r for r in all_inhouse if r.property_code in selected and r.appears_in_inhouse_check
+    ]
     flagged = [r for r in scoped_inhouse if r.is_flagged]
     flagged_open = [r for r in flagged if not r.handled]
 
@@ -280,7 +282,9 @@ def inhouse_check():
     property_directory = get_property_directory(all_inhouse)
     known_properties = {code for code, _ in property_directory}
     selected = get_selected_properties(known_properties)
-    scoped = [r for r in all_inhouse if r.property_code in selected]
+    scoped = [
+        r for r in all_inhouse if r.property_code in selected and r.appears_in_inhouse_check
+    ]
 
     # Flagged reservations that still need attention first, grouped by hotel,
     # then by arrival date. Sorted on the real date objects, before
